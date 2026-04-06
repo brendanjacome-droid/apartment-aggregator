@@ -12,8 +12,9 @@ class ListingResponse(BaseModel):
     property_type: str = "multifamily"
     address: Optional[str] = None
     city: Optional[str] = None
-    state: Optional[str] = None
-    zip_code: Optional[str] = None
+    province_state: Optional[str] = None
+    country: str = "US"
+    postal_code: Optional[str] = None
     latitude: Optional[float] = None
     longitude: Optional[float] = None
     price: Optional[float] = None
@@ -79,5 +80,6 @@ class StatsResponse(BaseModel):
     avg_price: Optional[float] = None
     avg_cap_rate: Optional[float] = None
     avg_units: Optional[float] = None
-    by_state: dict[str, int] = {}
+    by_region: dict[str, int] = {}
+    by_country: dict[str, int] = {}
     by_source: dict[str, int] = {}

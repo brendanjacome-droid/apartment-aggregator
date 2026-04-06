@@ -7,6 +7,8 @@ const US_STATES = [
   'VT','VA','WA','WV','WI','WY'
 ];
 
+const CA_PROVINCES = ['AB','BC','MB','NB','NL','NS','NT','NU','ON','PE','QC','SK','YT'];
+
 export default function FilterPanel({ filters, onFilterChange }) {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -29,14 +31,32 @@ export default function FilterPanel({ filters, onFilterChange }) {
       {isOpen && (
         <div className="p-4 border-t border-gray-200 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-600 mb-1">State</label>
+            <label className="block text-sm font-medium text-gray-600 mb-1">Country</label>
             <select
-              value={filters.state || ''}
-              onChange={(e) => handleChange('state', e.target.value)}
+              value={filters.country || ''}
+              onChange={(e) => handleChange('country', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="">All States</option>
-              {US_STATES.map(s => <option key={s} value={s}>{s}</option>)}
+              <option value="">All Countries</option>
+              <option value="CA">Canada</option>
+              <option value="US">United States</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-600 mb-1">Province / State</label>
+            <select
+              value={filters.province_state || ''}
+              onChange={(e) => handleChange('province_state', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">All</option>
+              <optgroup label="Canada">
+                {CA_PROVINCES.map(s => <option key={s} value={s}>{s}</option>)}
+              </optgroup>
+              <optgroup label="United States">
+                {US_STATES.map(s => <option key={s} value={s}>{s}</option>)}
+              </optgroup>
             </select>
           </div>
 
@@ -131,7 +151,7 @@ export default function FilterPanel({ filters, onFilterChange }) {
               <option value="num_units">Units</option>
               <option value="cap_rate">Cap Rate</option>
               <option value="city">City</option>
-              <option value="state">State</option>
+              <option value="province_state">Province/State</option>
             </select>
           </div>
 

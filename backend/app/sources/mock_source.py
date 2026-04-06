@@ -6,7 +6,7 @@ from app.sources.base import DataSource
 
 fake = Faker()
 
-STATES_WITH_COORDS = {
+US_STATES_WITH_COORDS = {
     "AL": (32.36, -86.30), "AK": (63.59, -154.49), "AZ": (34.05, -111.09),
     "AR": (35.20, -91.83), "CA": (36.78, -119.42), "CO": (39.55, -105.78),
     "CT": (41.60, -72.76), "DE": (38.91, -75.53), "FL": (27.66, -81.52),
@@ -24,6 +24,13 @@ STATES_WITH_COORDS = {
     "TX": (31.97, -99.90), "UT": (39.32, -111.09), "VT": (44.56, -72.58),
     "VA": (37.43, -78.66), "WA": (47.75, -120.74), "WV": (38.60, -80.45),
     "WI": (43.78, -88.79), "WY": (43.08, -107.29), "DC": (38.91, -77.04),
+}
+
+CA_PROVINCES_WITH_COORDS = {
+    "ON": (43.65, -79.38), "QC": (45.50, -73.57), "BC": (49.28, -123.12),
+    "AB": (51.05, -114.07), "MB": (49.90, -97.14), "SK": (50.45, -104.62),
+    "NS": (44.65, -63.57), "NB": (45.96, -66.64), "NL": (47.57, -52.71),
+    "PE": (46.24, -63.13),
 }
 
 MAJOR_CITIES = {
@@ -47,6 +54,19 @@ MAJOR_CITIES = {
     "MD": ["Baltimore", "Bethesda", "Silver Spring", "Rockville", "Columbia"],
     "MN": ["Minneapolis", "St. Paul", "Rochester", "Duluth", "Bloomington"],
     "MO": ["St. Louis", "Kansas City", "Springfield", "Columbia", "Independence"],
+}
+
+CA_MAJOR_CITIES = {
+    "ON": ["Toronto", "Ottawa", "Mississauga", "Hamilton", "London", "Brampton", "Kitchener"],
+    "QC": ["Montreal", "Quebec City", "Laval", "Gatineau", "Longueuil", "Sherbrooke"],
+    "BC": ["Vancouver", "Surrey", "Burnaby", "Richmond", "Victoria", "Kelowna"],
+    "AB": ["Calgary", "Edmonton", "Red Deer", "Lethbridge", "St. Albert"],
+    "MB": ["Winnipeg", "Brandon", "Steinbach"],
+    "SK": ["Saskatoon", "Regina", "Prince Albert"],
+    "NS": ["Halifax", "Dartmouth", "Sydney"],
+    "NB": ["Moncton", "Saint John", "Fredericton"],
+    "NL": ["St. John's", "Mount Pearl", "Corner Brook"],
+    "PE": ["Charlottetown", "Summerside"],
 }
 
 BUILDING_NAMES = [
@@ -91,12 +111,28 @@ def _generate_building_name() -> str:
 
 
 def _generate_listing(idx: int) -> dict:
-    state = random.choice(list(STATES_WITH_COORDS.keys()))
-    base_lat, base_lon = STATES_WITH_COORDS[state]
+    # 30% chance of Canadian listing
+    is_canadian = random.random() < 0.3
+
+    if is_canadian:
+        country = "CA"
+        region = random.choice(list(CA_PROVINCES_WITH_COORDS.keys()))
+        base_lat, base_lon = CA_PROVINCES_WITH_COORDS[region]
+        cities = CA_MAJOR_CITIES.get(region, [fake.city()])
+        postal_code = fake.bothify("?#? #?#").upper()
+        high_cost_regions = ("ON", "BC")
+        low_cost_regions = ("NB", "NL", "PE", "SK")
+    else:
+        country = "US"
+        region = random.choice(list(US_STATES_WITH_COORDS.keys()))
+        base_lat, base_lon = US_STATES_WITH_COORDS[region]
+        cities = MAJOR_CITIES.get(region, [fake.city()])
+        postal_code = fake.zipcode()
+        high_cost_regions = ("NY", "CA", "MA", "DC", "WA", "CO")
+        low_cost_regions = ("MS", "AR", "WV", "AL")
+
     lat = base_lat + random.uniform(-1.5, 1.5)
     lon = base_lon + random.uniform(-1.5, 1.5)
-
-    cities = MAJOR_CITIES.get(state, [fake.city()])
     city = random.choice(cities)
 
     num_units = random.choice([4, 6, 8, 10, 12, 16, 20, 24, 30, 40, 50, 60, 80, 100, 150, 200, 300])
@@ -105,11 +141,10 @@ def _generate_listing(idx: int) -> dict:
     sqft_per_unit = random.randint(600, 1200)
     square_footage = num_units * sqft_per_unit
 
-    # Price correlates with units and location
     base_price_per_unit = random.randint(50_000, 250_000)
-    if state in ("NY", "CA", "MA", "DC", "WA", "CO"):
+    if region in high_cost_regions:
         base_price_per_unit = int(base_price_per_unit * random.uniform(1.3, 2.5))
-    if state in ("MS", "AR", "WV", "AL"):
+    if region in low_cost_regions:
         base_price_per_unit = int(base_price_per_unit * random.uniform(0.5, 0.8))
 
     price = num_units * base_price_per_unit
@@ -129,7 +164,7 @@ def _generate_listing(idx: int) -> dict:
         "title": name,
         "description": (
             f"{num_units}-unit {['garden-style', 'mid-rise', 'high-rise', 'walk-up', 'townhome-style'][random.randint(0,4)]} "
-            f"apartment complex built in {year_built}. Located in {city}, {state}. "
+            f"apartment complex built in {year_built}. Located in {city}, {region}. "
             f"Currently {occupancy}% occupied with strong rental demand. "
             f"{'Value-add opportunity with potential for rent increases.' if cap_rate > 6 else 'Stabilized asset with consistent cash flow.'} "
             f"{'Recently renovated.' if year_built > 2015 or random.random() > 0.7 else ''}"
@@ -137,8 +172,9 @@ def _generate_listing(idx: int) -> dict:
         "property_type": "multifamily",
         "address": fake.street_address(),
         "city": city,
-        "state": state,
-        "zip_code": fake.zipcode(),
+        "province_state": region,
+        "country": country,
+        "postal_code": postal_code,
         "latitude": round(lat, 6),
         "longitude": round(lon, 6),
         "price": round(price, 2),

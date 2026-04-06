@@ -21,7 +21,8 @@ router = APIRouter(prefix="/api")
 @router.get("/listings", response_model=PaginatedListings)
 def search_listings(
     q: Optional[str] = None,
-    state: Optional[str] = None,
+    province_state: Optional[str] = None,
+    country: Optional[str] = None,
     city: Optional[str] = None,
     min_price: Optional[float] = None,
     max_price: Optional[float] = None,
@@ -30,7 +31,7 @@ def search_listings(
     min_cap_rate: Optional[float] = None,
     max_cap_rate: Optional[float] = None,
     source: Optional[str] = None,
-    sort_by: str = Query("fetched_at", pattern="^(price|num_units|cap_rate|fetched_at|listed_date|city|state)$"),
+    sort_by: str = Query("fetched_at", pattern="^(price|num_units|cap_rate|fetched_at|listed_date|city|province_state)$"),
     sort_order: str = Query("desc", pattern="^(asc|desc)$"),
     page: int = Query(1, ge=1),
     per_page: int = Query(20, ge=1, le=100),
@@ -44,14 +45,16 @@ def search_listings(
             or_(
                 Listing.title.ilike(search),
                 Listing.city.ilike(search),
-                Listing.state.ilike(search),
+                Listing.province_state.ilike(search),
                 Listing.address.ilike(search),
                 Listing.description.ilike(search),
             )
         )
 
-    if state:
-        query = query.filter(Listing.state == state.upper())
+    if province_state:
+        query = query.filter(Listing.province_state.ilike(province_state))
+    if country:
+        query = query.filter(Listing.country == country.upper())
     if city:
         query = query.filter(Listing.city.ilike(f"%{city}%"))
     if min_price is not None:
@@ -133,13 +136,21 @@ def get_stats(db: Session = Depends(get_db)):
     avg_cap = db.query(func.avg(Listing.cap_rate)).filter(Listing.cap_rate.isnot(None)).scalar()
     avg_units = db.query(func.avg(Listing.num_units)).filter(Listing.num_units.isnot(None)).scalar()
 
-    by_state_rows = (
-        db.query(Listing.state, func.count(Listing.id))
-        .filter(Listing.state.isnot(None))
-        .group_by(Listing.state)
+    by_region_rows = (
+        db.query(Listing.province_state, func.count(Listing.id))
+        .filter(Listing.province_state.isnot(None))
+        .group_by(Listing.province_state)
         .all()
     )
-    by_state = {row[0]: row[1] for row in by_state_rows}
+    by_region = {row[0]: row[1] for row in by_region_rows}
+
+    by_country_rows = (
+        db.query(Listing.country, func.count(Listing.id))
+        .filter(Listing.country.isnot(None))
+        .group_by(Listing.country)
+        .all()
+    )
+    by_country = {row[0]: row[1] for row in by_country_rows}
 
     by_source_rows = (
         db.query(Listing.source_name, func.count(Listing.id))
@@ -156,6 +167,7 @@ def get_stats(db: Session = Depends(get_db)):
         avg_price=round(avg_price, 2) if avg_price else None,
         avg_cap_rate=round(avg_cap, 2) if avg_cap else None,
         avg_units=round(avg_units, 1) if avg_units else None,
-        by_state=by_state,
+        by_region=by_region,
+        by_country=by_country,
         by_source=by_source,
     )

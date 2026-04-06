@@ -33,7 +33,7 @@ export default function ListingDetail({ listing, onClose }) {
               <div>
                 <h2 className="text-2xl font-bold text-gray-900">{listing.title}</h2>
                 <p className="text-gray-500 mt-1">{listing.address}</p>
-                <p className="text-gray-500">{listing.city}, {listing.state} {listing.zip_code}</p>
+                <p className="text-gray-500">{listing.city}, {listing.province_state} {listing.postal_code} {listing.country}</p>
               </div>
               <span className="text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded-full font-medium">
                 {listing.source_name}

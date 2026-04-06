@@ -31,7 +31,7 @@ export default function ListingCard({ listing, onClick }) {
       <div className="p-4">
         <h3 className="font-semibold text-gray-900 text-lg truncate">{listing.title}</h3>
         <p className="text-sm text-gray-500 mt-1">
-          {listing.city}, {listing.state} {listing.zip_code}
+          {listing.city}, {listing.province_state} {listing.postal_code} {listing.country === 'CA' ? '🇨🇦' : ''}
         </p>
 
         <div className="mt-3 flex items-center justify-between">

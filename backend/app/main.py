@@ -16,6 +16,12 @@ from app.sources.mock_source import MockSource
 from app.sources.attom_source import AttomSource
 from app.sources.reonomy_source import ReonomySource
 from app.sources.estated_source import EstatedSource
+from app.sources.toronto_source import TorontoSource
+from app.sources.calgary_source import CalgarySource
+from app.sources.edmonton_source import EdmontonSource
+from app.sources.vancouver_source import VancouverSource
+from app.sources.montreal_source import MontrealSource
+from app.sources.cmhc_source import CmhcSource
 from app.scheduler import start_scheduler
 
 logging.basicConfig(level=logging.INFO)
@@ -30,10 +36,17 @@ async def lifespan(app: FastAPI):
     init_db()
 
     # Register data sources
-    registry.register(MockSource(count=250))
+    registry.register(MockSource(count=300))
     registry.register(AttomSource())
     registry.register(ReonomySource())
     registry.register(EstatedSource())
+    # Canadian sources (free, no API key needed)
+    registry.register(TorontoSource())
+    registry.register(CalgarySource())
+    registry.register(EdmontonSource())
+    registry.register(VancouverSource())
+    registry.register(MontrealSource())
+    registry.register(CmhcSource())
 
     # Seed mock data on first run
     db = SessionLocal()

@@ -17,8 +17,9 @@ class Listing(Base):
 
     address = Column(String(500))
     city = Column(String(200))
-    state = Column(String(2))
-    zip_code = Column(String(10))
+    province_state = Column(String(100))
+    country = Column(String(2), default="US")
+    postal_code = Column(String(10))
     latitude = Column(Float)
     longitude = Column(Float)
 

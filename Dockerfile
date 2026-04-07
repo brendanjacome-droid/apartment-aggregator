@@ -1,5 +1,9 @@
 FROM python:3.12-slim
 
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    DATABASE_URL="sqlite:////tmp/apartment_aggregator.db"
+
 # Install Node.js 20 for building the frontend
 RUN apt-get update && apt-get install -y curl \
     && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
@@ -32,4 +36,5 @@ WORKDIR /app/backend
 
 EXPOSE 8000
 
-CMD python -m uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}
+# Use shell form so $PORT is expanded at runtime by Railway
+CMD ["sh", "-c", "python -m uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
